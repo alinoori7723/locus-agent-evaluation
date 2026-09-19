@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "locus-agent-evaluation"
+version = "0.1.0"
+description = "Evaluation harness for tool-using AI agents focused on shortcut detection, information leakage, invalid execution paths, and reproducible behavioral testing."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{name = "Ali Noori"}]
+dependencies = []
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python :: 3",
+  "Topic :: Software Development :: Testing",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.urls]
+Repository = "https://github.com/alinoori7723/locus-agent-evaluation"
+Issues = "https://github.com/alinoori7723/locus-agent-evaluation/issues"
+
+[project.scripts]
+locus-eval = "locus_eval.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+locus_eval = ["fixtures/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+[tool.coverage.run]
+source = ["locus_eval"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 90

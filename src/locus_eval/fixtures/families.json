@@ -1,0 +1,29 @@
+[
+  {
+    "name": "delivery",
+    "summary": "A delivery pipeline cannot complete its acceptance check.",
+    "components": ["router", "queue"],
+    "checks": {
+      "router": {"input": "orders", "expected": "orders-primary", "faulty": "orders-missing"},
+      "queue": {"input": "job-7", "expected": "acknowledged", "faulty": "dropped"}
+    }
+  },
+  {
+    "name": "transformation",
+    "summary": "A text transformation pipeline cannot complete its acceptance check.",
+    "components": ["normalizer", "encoder"],
+    "checks": {
+      "normalizer": {"input": " Hello ", "expected": "hello", "faulty": " Hello "},
+      "encoder": {"input": "hello", "expected": "68656c6c6f", "faulty": "hello"}
+    }
+  },
+  {
+    "name": "retrieval",
+    "summary": "A document retrieval pipeline cannot complete its acceptance check.",
+    "components": ["index", "cache"],
+    "checks": {
+      "index": {"input": "document-7", "expected": "record-7", "faulty": "not-found"},
+      "cache": {"input": "record-7", "expected": "revision-2", "faulty": "revision-1"}
+    }
+  }
+]

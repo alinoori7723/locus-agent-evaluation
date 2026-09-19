@@ -1,0 +1,127 @@
+{
+  "audits": {
+    "error_paths": {
+      "failures": [],
+      "passed": true
+    },
+    "observations": {
+      "failures": [],
+      "family_count": 3,
+      "pair_count": 12,
+      "passed": true,
+      "scenario_count": 24
+    },
+    "passed": true,
+    "shortcuts": {
+      "baselines": {
+        "diagnosis-only": {
+          "agent_errors": 0,
+          "answer_match_rate": 1.0,
+          "answer_matches": 24,
+          "completed_episodes": 0,
+          "episodes": 24,
+          "false_credit_episodes": 24,
+          "invalid_actions": 156,
+          "mean_actions": 8.0,
+          "verified_success_rate": 0.0,
+          "verified_successes": 0
+        },
+        "diagnostic": {
+          "agent_errors": 0,
+          "answer_match_rate": 1.0,
+          "answer_matches": 24,
+          "completed_episodes": 24,
+          "episodes": 24,
+          "false_credit_episodes": 0,
+          "invalid_actions": 0,
+          "mean_actions": 4.5,
+          "verified_success_rate": 1.0,
+          "verified_successes": 24
+        },
+        "first-candidate": {
+          "agent_errors": 0,
+          "answer_match_rate": 0.5,
+          "answer_matches": 12,
+          "completed_episodes": 0,
+          "episodes": 24,
+          "false_credit_episodes": 12,
+          "invalid_actions": 192,
+          "mean_actions": 8.0,
+          "verified_success_rate": 0.0,
+          "verified_successes": 0
+        },
+        "ticket-follower": {
+          "agent_errors": 0,
+          "answer_match_rate": 0.5,
+          "answer_matches": 12,
+          "completed_episodes": 0,
+          "episodes": 24,
+          "false_credit_episodes": 12,
+          "invalid_actions": 192,
+          "mean_actions": 8.0,
+          "verified_success_rate": 0.0,
+          "verified_successes": 0
+        }
+      },
+      "failures": [],
+      "passed": true
+    }
+  },
+  "episode_count": 96,
+  "evidence_class": "synthetic-environment",
+  "implementation_sha256": "ec0727e4b4f5db22035bdb70d4be30ae2d18aaf4d7f7179700957252f5fdc46b",
+  "metrics": {
+    "diagnosis-only": {
+      "agent_errors": 0,
+      "answer_match_rate": 1.0,
+      "answer_matches": 24,
+      "completed_episodes": 0,
+      "episodes": 24,
+      "false_credit_episodes": 24,
+      "invalid_actions": 156,
+      "mean_actions": 8.0,
+      "verified_success_rate": 0.0,
+      "verified_successes": 0
+    },
+    "diagnostic": {
+      "agent_errors": 0,
+      "answer_match_rate": 1.0,
+      "answer_matches": 24,
+      "completed_episodes": 24,
+      "episodes": 24,
+      "false_credit_episodes": 0,
+      "invalid_actions": 0,
+      "mean_actions": 4.5,
+      "verified_success_rate": 1.0,
+      "verified_successes": 24
+    },
+    "first-candidate": {
+      "agent_errors": 0,
+      "answer_match_rate": 0.5,
+      "answer_matches": 12,
+      "completed_episodes": 0,
+      "episodes": 24,
+      "false_credit_episodes": 12,
+      "invalid_actions": 192,
+      "mean_actions": 8.0,
+      "verified_success_rate": 0.0,
+      "verified_successes": 0
+    },
+    "ticket-follower": {
+      "agent_errors": 0,
+      "answer_match_rate": 0.5,
+      "answer_matches": 12,
+      "completed_episodes": 0,
+      "episodes": 24,
+      "false_credit_episodes": 12,
+      "invalid_actions": 192,
+      "mean_actions": 8.0,
+      "verified_success_rate": 0.0,
+      "verified_successes": 0
+    }
+  },
+  "scenario_count": 24,
+  "schema_version": "1.0",
+  "seed": 17,
+  "suite_sha256": "91b501d660dbd976416bc38378e36e82ac1bdb03c19168bf2df97104a27169b3"
+}
