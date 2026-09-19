@@ -6,6 +6,7 @@ from pathlib import Path
 
 from locus_eval.audits import audit_suite
 from locus_eval.environment import Environment
+from locus_eval.providers.telemetry import summarize_provider_calls, validate_trace
 from locus_eval.runner import summarize
 from locus_eval.scenarios import build_suite, suite_digest
 from locus_eval.serialization import canonical_json, digest
@@ -15,7 +16,7 @@ REPORT_FILES = ("summary.json", "episodes.jsonl", "report.md")
 
 def implementation_digest() -> str:
     root = Path(__file__).parent
-    paths = sorted([*root.glob("*.py"), *root.glob("fixtures/*.json")])
+    paths = sorted([*root.rglob("*.py"), *root.glob("fixtures/*.json")])
     return digest(
         {
             path.relative_to(root).as_posix(): path.read_text("utf-8").replace("\r\n", "\n")
@@ -24,17 +25,29 @@ def implementation_digest() -> str:
     )
 
 
-def make_summary(episodes: list[dict], seed: int) -> dict:
+def make_summary(episodes: list[dict], seed: int, case_ids: list[str] | None = None) -> dict:
     scenarios = build_suite(seed)
+    available = {scenario.case_id for scenario in scenarios}
+    selected = [scenario.case_id for scenario in scenarios] if case_ids is None else case_ids
+    if (
+        not isinstance(selected, list)
+        or not selected
+        or any(not isinstance(case, str) or case not in available for case in selected)
+        or len(set(selected)) != len(selected)
+    ):
+        raise ValueError("Invalid scenario selection")
     return {
-        "schema_version": "1.0",
+        "schema_version": "2.0",
         "evidence_class": "synthetic-environment",
         "seed": seed,
         "scenario_count": len(scenarios),
+        "selected_case_ids": selected,
+        "selected_scenario_count": len(selected),
         "episode_count": len(episodes),
         "suite_sha256": suite_digest(scenarios),
         "implementation_sha256": implementation_digest(),
         "metrics": summarize(episodes),
+        "provider_usage": summarize_provider_calls(episodes),
         "audits": audit_suite(scenarios),
     }
 
@@ -45,7 +58,8 @@ def markdown_report(summary: dict) -> str:
         "",
         "Deterministic synthetic fixtures. Trace replay does not attest agent provenance.",
         "",
-        f"Seed: `{summary['seed']}` · Scenarios: **{summary['scenario_count']}** · "
+        f"Seed: `{summary['seed']}` · Selected scenarios: "
+        f"**{summary['selected_scenario_count']}/{summary['scenario_count']}** · "
         f"Episodes: **{summary['episode_count']}**",
         "",
         "| Agent | Answer match | Verified success | False credit | Invalid actions |",
@@ -57,6 +71,28 @@ def markdown_report(summary: dict) -> str:
             f"{metric['verified_success_rate']:.0%} | "
             f"{metric['false_credit_episodes']}/{metric['episodes']} | "
             f"{metric['invalid_actions']} |"
+        )
+    if summary["provider_usage"]:
+        lines.extend(["", "## Provider calls", ""])
+        for name, usage in summary["provider_usage"].items():
+            lines.extend(
+                [
+                    f"- Agent: `{name}`; requested model: `{usage['model_requested']}`",
+                    f"- Requests attempted: {usage['attempted_requests']}; "
+                    f"call errors: {usage['call_errors']}",
+                    f"- Known tokens: {usage['known_input_tokens']} input, "
+                    f"{usage['known_output_tokens']} output; "
+                    f"unknown-usage calls: {usage['unknown_usage_calls']}",
+                    f"- Reported elapsed time: {usage['elapsed_ms']:.3f} ms",
+                ]
+            )
+        lines.extend(
+            [
+                "",
+                "Provider metadata is recorded evidence, not authenticated provenance.",
+                "A fresh model run can differ. Offline replay verifies captured actions and scores",
+                "without contacting a provider. Small public fixtures are integration smoke tests.",
+            ]
         )
     lines.extend(
         [
@@ -107,8 +143,13 @@ def markdown_report(summary: dict) -> str:
     return "\n".join(lines)
 
 
-def write_report(directory: Path, episodes: list[dict], seed: int) -> dict:
-    summary = make_summary(episodes, seed)
+def write_report(
+    directory: Path,
+    episodes: list[dict],
+    seed: int,
+    case_ids: list[str] | None = None,
+) -> dict:
+    summary = make_summary(episodes, seed, case_ids)
     directory.mkdir(parents=True, exist_ok=True)
     contents = {
         "summary.json": json.dumps(summary, indent=2, sort_keys=True) + "\n",
@@ -141,6 +182,8 @@ def replay_report(directory: Path) -> dict:
             raise ValueError(f"Report file digest mismatch: {name}")
     summary = json.loads((directory / "summary.json").read_text("utf-8"))
     scenarios = {scenario.case_id: scenario for scenario in build_suite(summary["seed"])}
+    selected = summary["selected_case_ids"]
+    make_summary([], summary["seed"], selected)
     episodes = [
         json.loads(line) for line in (directory / "episodes.jsonl").read_text("utf-8").splitlines()
     ]
@@ -149,11 +192,12 @@ def replay_report(directory: Path) -> dict:
     seen = set()
     for episode in episodes:
         key = episode["agent"], episode["case_id"]
-        if key in seen or key[1] not in scenarios:
+        if key in seen or key[1] not in selected:
             raise ValueError("Duplicate or unknown episode")
         seen.add(key)
         scenario = scenarios[key[1]]
         environment = Environment(scenario)
+        observations = [environment.observe()]
         if episode["initial_observation_sha256"] != digest(environment.observe()):
             raise ValueError("Initial observation mismatch")
         if episode["family"] != scenario.family:
@@ -162,6 +206,7 @@ def replay_report(directory: Path) -> dict:
             if environment.done:
                 raise ValueError("Events after episode termination")
             environment.step(event["request"])
+            observations.append(environment.observe())
             if canonical_json(environment.events[-1]) != canonical_json(event):
                 raise ValueError("Tool event mismatch")
         agent_error = episode["score"]["termination"] == "agent_error"
@@ -173,10 +218,14 @@ def replay_report(directory: Path) -> dict:
             episode["score"]
         ):
             raise ValueError("Episode score mismatch")
+        if "provider_trace" in episode:
+            validate_trace(episode, observations)
+        elif "provider_error" in episode:
+            raise ValueError("Provider failure without provider trace")
     for name in {episode["agent"] for episode in episodes}:
-        if {case for agent, case in seen if agent == name} != set(scenarios):
+        if {case for agent, case in seen if agent == name} != set(selected):
             raise ValueError("Incomplete scenario coverage")
-    reconstructed = make_summary(episodes, summary["seed"])
+    reconstructed = make_summary(episodes, summary["seed"], selected)
     if canonical_json(summary) != canonical_json(reconstructed):
         raise ValueError("Summary, suite, or implementation mismatch")
     if (directory / "report.md").read_bytes() != markdown_report(reconstructed).encode("utf-8"):

@@ -4,6 +4,7 @@ from collections.abc import Callable, Mapping
 
 from locus_eval.environment import Environment
 from locus_eval.protocol import Agent
+from locus_eval.providers.base import ProviderAgent, ProviderFailure
 from locus_eval.scenarios import Scenario
 from locus_eval.serialization import digest
 
@@ -11,6 +12,8 @@ from locus_eval.serialization import digest
 def run_episode(scenario: Scenario, factory: Callable[[], Agent], agent_name: str) -> dict:
     environment = Environment(scenario)
     agent_error = False
+    provider_error = None
+    agent = None
     try:
         agent = factory()
     except Exception:
@@ -18,11 +21,15 @@ def run_episode(scenario: Scenario, factory: Callable[[], Agent], agent_name: st
     while not environment.done and not agent_error:
         try:
             request = agent.act(environment.observe())
+        except ProviderFailure as exc:
+            agent_error = True
+            provider_error = exc.code
+            break
         except Exception:
             agent_error = True
             break
         environment.step(request)
-    return {
+    episode = {
         "agent": agent_name,
         "case_id": scenario.case_id,
         "family": scenario.family,
@@ -30,18 +37,27 @@ def run_episode(scenario: Scenario, factory: Callable[[], Agent], agent_name: st
         "events": environment.events,
         "score": environment.score(agent_error=agent_error),
     }
+    if isinstance(agent, ProviderAgent):
+        episode["provider_trace"] = agent.telemetry()
+        episode["provider_error"] = provider_error
+    return episode
 
 
 def evaluate(
-    scenarios: tuple[Scenario, ...], agents: Mapping[str, Callable[[], Agent]]
+    scenarios: tuple[Scenario, ...],
+    agents: Mapping[str, Callable[[], Agent]],
+    progress: Callable[[int, int, dict], None] | None = None,
 ) -> list[dict]:
     if not scenarios or not agents:
         raise ValueError("Evaluation requires at least one scenario and one agent")
-    return [
-        run_episode(scenario, factory, name)
-        for name, factory in sorted(agents.items())
-        for scenario in scenarios
-    ]
+    episodes = []
+    for name, factory in sorted(agents.items()):
+        for scenario in scenarios:
+            episode = run_episode(scenario, factory, name)
+            episodes.append(episode)
+            if progress is not None:
+                progress(len(episodes), len(scenarios) * len(agents), episode)
+    return episodes
 
 
 def summarize(episodes: list[dict]) -> dict[str, dict]:

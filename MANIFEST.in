@@ -1,4 +1,4 @@
-include CONTRIBUTING.md requirements-dev.txt
+include CONTRIBUTING.md SECURITY.md requirements-dev.txt
 recursive-include docs *.md
 recursive-include examples *.py
 recursive-include scripts *.py

@@ -21,6 +21,11 @@ def main():
         )
         commands = (
             [str(python), "-m", "pip", "install", "--no-index", "--no-deps", str(wheel)],
+            [
+                str(python),
+                "-c",
+                "import importlib.util; assert importlib.util.find_spec('openai') is None",
+            ],
             [str(console), "demo", "--output", "report"],
             [str(python), "-m", "locus_eval", "replay", "report"],
         )

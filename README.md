@@ -15,12 +15,26 @@ receiving credit for a valid execution.
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
+One offline reference trace:
+
+```text
+probe(router)                   -> healthy [probe-1]
+probe(queue)                    -> failed  [probe-2]
+repair(queue, probe-2)           -> accepted
+verify()                        -> recovered [verification-4]
+submit(queue, verification-4)    -> VERIFIED SUCCESS
+```
+
+Run the deterministic demo below, or [evaluate a real OpenAI model](#run-a-real-model).
+Both paths use the same environment, rejection rules, scorer, and offline trace replay.
+
 ## What is here
 
 | Surface | Implementation |
 | --- | --- |
 | Evaluation environment | [Stateful incident simulator](src/locus_eval/environment.py) with evidence-bound transitions and bounded action budgets |
 | Agent interface | [Python protocol and JSON tool schemas](src/locus_eval/protocol.py); a fresh agent per episode |
+| Optional LLM integration | [OpenAI Responses adapter](src/locus_eval/providers/openai.py) with native function calls, bounded requests, and token telemetry |
 | Deterministic scenarios | [24 fixtures across three families](src/locus_eval/fixtures/families.json), arranged as 12 matched pairs |
 | Invalid-action rejection | Unknown tools, malformed arguments, forged or stale evidence, wrong targets, and premature submissions |
 | Information leakage tests | [Byte-equal initial views, error-path equivalence, and contaminated-fixture controls](tests/test_leakage.py) |
@@ -28,9 +42,14 @@ receiving credit for a valid execution.
 | Automated test suite | [Unit, adversarial, replay, and CLI tests](tests), plus Linux/Windows CI |
 | Sample reports | [Readable results](reports/sample/report.md), [JSON metrics](reports/sample/summary.json), and [full traces](reports/sample/episodes.jsonl) |
 
+Current validation: **207 automated tests**, **99% branch-aware coverage**, and offline replay of
+all **96 sample episodes**. Provider tests exercise the official SDK with a mock HTTP transport;
+they do not measure model performance.
+
 ## Run in one minute
 
-Python 3.11 or newer. No runtime dependencies, API keys, model downloads, or external services.
+Python 3.11 or newer. The default offline demo needs no runtime dependencies, API keys,
+model downloads, or external services. Provider integration is an optional extra.
 
 ```bash
 git clone https://github.com/alinoori7723/locus-agent-evaluation.git
@@ -60,6 +79,31 @@ the same code and checked by CI:
 
 These are deterministic software controls, not measured LLM performance. The environment is a small
 fixture simulator; its checks return specified values rather than calling real infrastructure.
+
+## Run a real model
+
+Install the OpenAI extra from this checkout and configure `OPENAI_API_KEY` in your local environment:
+
+```bash
+python -m pip install -e ".[openai]"
+locus-eval run --agent openai --model gpt-5.6 --limit 2 --max-requests 16 --output artifacts/live-eval
+locus-eval replay artifacts/live-eval
+```
+
+`--model` is required and passed to the provider unchanged; access depends on your API account.
+This command makes billable API calls. The two-case selection is an integration smoke test, not a
+benchmark result. Omit `--limit` to evaluate all 24 cases, using the default 192-request ceiling.
+
+The adapter sends only public observations, requires one function call at a time, and returns the
+chosen action to the deterministic evaluator. It uses `store=False`, disables SDK retries, and
+records requested/returned model IDs, request and response IDs, latency, and reported token usage.
+Transport failures stop further calls through a shared circuit breaker. Use a fresh output directory
+for each provider run. Offline replay makes no API calls; a fresh model run can produce different
+actions and scores.
+
+See [the live evaluation example](docs/live-evaluation.md) for setup, limits, failure handling,
+evidence boundaries, and the current status of published live results. The committed
+[sample report](reports/sample/report.md) remains a deterministic scripted reference.
 
 ## Why answer accuracy is insufficient
 
@@ -120,9 +164,9 @@ class MyAgent:
 ```
 
 This minimal example only probes; it demonstrates the interface and will not complete the task.
-[The working adapter example](examples/custom_agent.py) completes the full workflow. A model adapter
-can send the same public observation to a provider and return a parsed request; it owns provider
-timeouts and retries. No provider SDK is bundled.
+[The working adapter example](examples/custom_agent.py) completes the full workflow. The optional
+[OpenAI adapter](src/locus_eval/providers/openai.py) uses the same interface for real model actions.
+Other provider adapters can implement this protocol and own their timeout and retry policies.
 
 ```bash
 python -m locus_eval run --agent examples.custom_agent:ExampleAgent --output artifacts/custom
@@ -134,8 +178,9 @@ and error handling.
 
 ## Reproducibility and engineering decisions
 
-Reports bind the fixture suite and implementation with SHA-256 digests, record every normalized
-action and response, and omit timestamps and machine paths from their contents. Replay reruns the
+Reports bind the fixture suite and implementation with SHA-256 digests and record explicit case
+selection and every normalized action and response. Offline samples omit timestamps and machine
+paths; provider traces add measured elapsed times and usage. Replay reruns the
 recorded actions through a fresh environment and reconciles events, per-episode scores, aggregates,
 and the readable report. Regeneration is byte-identical for deterministic policies at the same
 source version and seed. Hashes detect inconsistency; they are not a signed proof of provenance.
@@ -168,7 +213,7 @@ design without treating software tests as empirical evidence about model reasoni
 The declared regression suite covers these fixtures and these baselines. It is not a general
 shortcut-free benchmark, a production incident system, or a sandbox for hostile Python code.
 An agent running in the evaluator's process can inspect local files or Python objects; the public
-observation boundary protects the interface, not the host. Real model studies need separate
-provider integration, isolation, held-out tasks, and experimental design.
+observation boundary protects the interface, not the host. Real model studies need isolation,
+held-out tasks, and experimental design beyond the included provider integration.
 
 Maintained by [Ali Noori](https://github.com/alinoori7723). [MIT licensed](LICENSE).

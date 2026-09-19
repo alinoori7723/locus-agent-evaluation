@@ -133,3 +133,13 @@ def test_agent_error_cannot_be_inserted_after_completion(report):
     resign(report)
     with pytest.raises(ValueError, match="Agent error after episode termination"):
         replay_report(report)
+
+
+def test_provider_failure_without_trace_is_rejected(report):
+    path = report / "episodes.jsonl"
+    episodes = [json.loads(line) for line in path.read_text("utf-8").splitlines()]
+    episodes[0]["provider_error"] = "PROVIDER_TIMEOUT"
+    path.write_bytes("".join(canonical_json(row) + "\n" for row in episodes).encode())
+    resign(report)
+    with pytest.raises(ValueError, match="without provider trace"):
+        replay_report(report)

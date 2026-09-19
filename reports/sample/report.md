@@ -2,7 +2,7 @@
 
 Deterministic synthetic fixtures. Trace replay does not attest agent provenance.
 
-Seed: `17` · Scenarios: **24** · Episodes: **96**
+Seed: `17` · Selected scenarios: **24/24** · Episodes: **96**
 
 | Agent | Answer match | Verified success | False credit | Invalid actions |
 | --- | ---: | ---: | ---: | ---: |
@@ -43,7 +43,7 @@ It cannot re-execute or authenticate an external agent's decision process.
 
 Suite SHA-256: `91b501d660dbd976416bc38378e36e82ac1bdb03c19168bf2df97104a27169b3`
 
-Implementation SHA-256: `ec0727e4b4f5db22035bdb70d4be30ae2d18aaf4d7f7179700957252f5fdc46b`
+Implementation SHA-256: `830948a99e8667256febbe8daf2c67eac16449c1c7d4bed8c6a5f6bf3450c8fd`
 
 These checks cover declared fixture properties and baselines. They do not establish
 general shortcut immunity, production security, reasoning, or model capability.

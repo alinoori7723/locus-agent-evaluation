@@ -35,4 +35,4 @@ jobs:
       - run: python -m coverage report
       - run: python -m locus_eval replay reports/sample
       - run: python -m build
-      - run: python scripts/check_wheel.py dist/locus_agent_evaluation-0.1.0-py3-none-any.whl
+      - run: python scripts/check_wheel.py dist/locus_agent_evaluation-0.2.0-py3-none-any.whl

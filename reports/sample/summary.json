@@ -69,7 +69,7 @@
   },
   "episode_count": 96,
   "evidence_class": "synthetic-environment",
-  "implementation_sha256": "ec0727e4b4f5db22035bdb70d4be30ae2d18aaf4d7f7179700957252f5fdc46b",
+  "implementation_sha256": "830948a99e8667256febbe8daf2c67eac16449c1c7d4bed8c6a5f6bf3450c8fd",
   "metrics": {
     "diagnosis-only": {
       "agent_errors": 0,
@@ -120,8 +120,36 @@
       "verified_successes": 0
     }
   },
+  "provider_usage": {},
   "scenario_count": 24,
-  "schema_version": "1.0",
+  "schema_version": "2.0",
   "seed": 17,
+  "selected_case_ids": [
+    "case-fe0513ef4a595e05",
+    "case-3080f9cb198a72c7",
+    "case-e8c632a62eb2cc34",
+    "case-95d1ea50d36cf4fb",
+    "case-bfddd509f50ce8b4",
+    "case-f56027348a3558d5",
+    "case-c627b9350c566358",
+    "case-aaa81e8804434b31",
+    "case-9dc2cbbc0f3c4874",
+    "case-e64ac4f8cf96564c",
+    "case-ce892f34af865d7b",
+    "case-16a2bd384f40fa48",
+    "case-ec499279d86bf8c5",
+    "case-51ebaf18e50125de",
+    "case-f5c253f1e81cff1a",
+    "case-8b2d5931cfd4e18b",
+    "case-e53a685df2bb1643",
+    "case-7d157f6b03eed2e9",
+    "case-f8e6c4f308193274",
+    "case-e2a87080d57da05c",
+    "case-e82ec70db9d5bdd2",
+    "case-2eea90796962beca",
+    "case-eaa887c85ff2db98",
+    "case-f0a9c6e64fb9ff7b"
+  ],
+  "selected_scenario_count": 24,
   "suite_sha256": "91b501d660dbd976416bc38378e36e82ac1bdb03c19168bf2df97104a27169b3"
 }

@@ -27,6 +27,7 @@ follow one episode through its validation and replay code.
 | Reproducibility | Canonical JSON, stable fixture expansion, source/data digests, and replay |
 | Regression control | Positive and negative policy controls with exact finite-suite expectations |
 | Packaging | Installable zero-dependency runtime, CLI, wheel verification outside the checkout |
+| Model integration | Optional OpenAI SDK, native tool calls, request limits, failure telemetry, and offline provider-trace replay |
 | Delivery | Pinned development tools, lint/format checks, coverage gate, Linux/Windows CI |
 | Technical communication | Executable quickstart, sample traces, architecture, contract, and threat model |
 
@@ -48,7 +49,12 @@ checks detect specific leaks and biased nuisance distributions.
 An aggregate can conceal illegal steps, missing cases, or scoring mistakes. A trace lets a reviewer
 verify every transition and reproduce the aggregate without trusting the original agent process.
 
-**What would change next for real agents?**
-Add a provider adapter with bounded retries, process isolation, explicit cost accounting, and new
-held-out task families. Preserve the observation/ground-truth boundary and distinguish provider
-failures from policy errors and evaluator bugs. Those extensions are not claimed as implemented.
+**How do real models enter the evaluation?**
+The optional OpenAI adapter sends the public state and four function schemas to the Responses API.
+It uses an explicit request budget, no retries, and a configured timeout. The response supplies an
+action; the same deterministic environment validates and scores it. SDK transport tests exercise
+serialization and failure paths without claiming live inference.
+
+Production extensions still need process isolation, explicit monetary budgets, and new held-out
+task families. Preserve the observation/ground-truth boundary and distinguish provider failures
+from policy errors and evaluator bugs. Those extensions are not claimed as implemented.

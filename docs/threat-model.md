@@ -18,8 +18,14 @@ credit. They do not protect the host from malicious code running inside the Pyth
 | Missing or duplicated evaluation cases | Full per-agent scenario coverage check | Replay coverage tests |
 
 The misleading ticket is a deliberately simple untrusted instruction. It exercises a prompt-
-injection-like decision surface, but no real language model has been tested against it here.
-The ticket-follower is a scripted failure control, not evidence of a model vulnerability.
+injection-like decision surface. The ticket-follower is a scripted failure control, not evidence
+of a model vulnerability; a live integration smoke test is not a general injection-resistance study.
+
+The optional OpenAI adapter sends only the public observation and tool schemas to the official API.
+Its configured timeout, shared request budget, output-token limit, and disabled retries bound specific
+parts of the workload. An HTTP/connection/timeout error stops further attempts for the run. These are
+not a process sandbox or a guaranteed dollar spending cap. Secrets and raw exception bodies are not
+part of the provider trace. See [SECURITY.md](../SECURITY.md).
 
 ## Outside the boundary
 

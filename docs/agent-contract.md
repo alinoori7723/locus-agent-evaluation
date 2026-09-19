@@ -126,3 +126,16 @@ an import/file error. Custom-agent reports also include the separate bundled bas
 passing that audit does not certify the custom agent.
 
 Adapters are trusted local Python code. Do not use this interface as a hostile-code sandbox.
+
+## Built-in OpenAI adapter
+
+`locus-eval run --agent openai --model MODEL` selects the optional Responses API adapter. It returns
+the model's function request to `Environment.step`; it has no separate success scorer. Configure the
+SDK transport timeout with `--timeout`, the run-wide request budget with `--max-requests`, and each
+generation's output limit with `--max-output-tokens`. SDK retries are disabled.
+
+Provider failures retain the ordinary `agent_error` termination plus a sanitized `provider_error`
+code. Codes distinguish authentication, rate limiting, timeout, connection/HTTP failure, incomplete
+response, refusal, missing/multiple tool calls, invalid JSON, exhausted budget, and an open circuit.
+The complete call configuration and minimal response telemetry are stored in `provider_trace`.
+They are not included in the next public observation. See [the live example](live-evaluation.md).

@@ -30,7 +30,7 @@ Before release, build and smoke-test the wheel from a clean temporary environmen
 
 ```bash
 python -m build
-python scripts/check_wheel.py dist/locus_agent_evaluation-0.1.0-py3-none-any.whl
+python scripts/check_wheel.py dist/locus_agent_evaluation-0.2.0-py3-none-any.whl
 ```
 
 CI runs on Linux with Python 3.11, 3.12, and 3.13, and on Windows with Python 3.13. It also compares

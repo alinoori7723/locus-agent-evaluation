@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "locus-agent-evaluation"
-version = "0.1.0"
+version = "0.2.0"
 description = "Evaluation harness for tool-using AI agents focused on shortcut detection, information leakage, invalid execution paths, and reproducible behavioral testing."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -17,6 +17,9 @@ classifiers = [
   "Topic :: Software Development :: Testing",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
+
+[project.optional-dependencies]
+openai = ["openai>=3.16.2,<4"]
 
 [project.urls]
 Repository = "https://github.com/alinoori7723/locus-agent-evaluation"
