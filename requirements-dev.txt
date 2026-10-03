@@ -1,5 +1,5 @@
-pytest==9.0.2
-coverage==7.16.1
-ruff==0.16.8
+pytest==9.1.1
+coverage==7.16.2
+ruff==0.16.9
 build==1.6.1
-openai==3.16.2
+openai==3.22.1
